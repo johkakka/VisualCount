@@ -115,7 +115,6 @@ class MainWindow(QMainWindow):
         self.update()
 
     def showNextFrame(self):
-        print("next")
         if self.moviePlayFlg == False:
             return
 

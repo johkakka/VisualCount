@@ -112,11 +112,12 @@ class MainWindow(QMainWindow):
             self.framePos -= 10
         else:
             self.framePos = 0
+        self.get_image()
         self.update()
 
     def showNextFrame(self):
-        if self.moviePlayFlg == False:
-            return
+        # if self.moviePlayFlg == False:
+        #     return
 
         self.framePos += self.speed
         if self.framePos < 0:
@@ -125,13 +126,19 @@ class MainWindow(QMainWindow):
         elif self.framePos > self.frameNum - 1:
             self.framePos = self.frameNum - 1
             self.movieStop()
+        self.get_image()
+        self.update()
 
+    def get_image(self):
         # OpenCVで動画の再生フレーム位置を設定する
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.framePos)
         ret, frame = self.video.read()
+        if frame is None:
+            print("cannot open file")
+            return False
         # 再生フレームをOpenCV形式からPyQtのQImageに変換する
         self.image = self.openCV2Qimage(frame)
-        self.update()
+        return True
 
     def openFileDialog(self):
         options = QFileDialog.Options()
@@ -149,7 +156,11 @@ class MainWindow(QMainWindow):
         if self.video is not None and self.video.isOpened():
             self.video.release()
         self.video = cv2.VideoCapture(inputFileName)
-        print('OpenCV movie read success.')
+
+        # 最初のフレームを表示する
+        self.framePos = 0
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.framePos)
+
         # フレーム数を取得
         self.frameNum = self.video.get(cv2.CAP_PROP_FRAME_COUNT)
         print('movie frameNum: ', str(self.frameNum))
@@ -157,15 +168,10 @@ class MainWindow(QMainWindow):
         self.frameRate = self.video.get(cv2.CAP_PROP_FPS)
         print('movie frameRate: ', str(self.frameRate))
 
-        # 最初のフレームを表示する
-        self.framePos = 0
-        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.framePos)
-        ret, frame = self.video.read()
-        print('openCV current frame read')
-        if frame is None:
-            print("cannot open file")
+        if not self.get_image():
+            self.image = None
+            self.update()
             return
-        self.image = self.openCV2Qimage(frame)
         print('convert openCV to QImage')
         self.imgWidth = self.image.width()
         self.imgHeith = self.image.height()

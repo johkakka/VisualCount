@@ -162,6 +162,9 @@ class MainWindow(QMainWindow):
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.framePos)
         ret, frame = self.video.read()
         print('openCV current frame read')
+        if frame is None:
+            print("cannot open file")
+            return
         self.image = self.openCV2Qimage(frame)
         print('convert openCV to QImage')
         self.imgWidth = self.image.width()
@@ -185,7 +188,7 @@ class MainWindow(QMainWindow):
         painter.setBrush(Qt.white)
         painter.drawRect(event.rect())
 
-        if self.image == None:
+        if self.image is None:
             return
         pixmap = QPixmap.fromImage(self.image)
         pixmap = pixmap.scaled(event.rect().width(), event.rect().height(), Qt.KeepAspectRatio, Qt.FastTransformation)

@@ -44,6 +44,7 @@ class MainWindow(QMainWindow):
         # メインウィンドウのメニューを設定する
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('File')
+        controlMenu = mainMenu.addMenu('Control')
         optionMenu = mainMenu.addMenu('Option')
         helpMenu = mainMenu.addMenu('Help')
 
@@ -63,17 +64,34 @@ class MainWindow(QMainWindow):
         # 動画の再生ボタンを設定する
         moviePlayBtn = QPushButton(self.style().standardIcon(getattr(QStyle, 'SP_MediaPlay')), 'Play', self)
         moviePlayBtn.clicked.connect(self.moviePlay)
+        moviePlayMenu = QAction(self.style().standardIcon(getattr(QStyle, 'SP_MediaPlay')), 'Play', self)
+        moviePlayMenu.setShortcut('Ctrl+R')
+        moviePlayMenu.triggered.connect(self.moviePlay)
+        controlMenu.addAction(moviePlayMenu)
+
 
         # 動画の停止ボタンを設定する
         movieStopBtn = QPushButton(self.style().standardIcon(getattr(QStyle, 'SP_MediaPause')), 'Pause', self)
         movieStopBtn.clicked.connect(self.movieStop)
+        movieStopMenu = QAction(self.style().standardIcon(getattr(QStyle, 'SP_MediaPause')), 'Pause', self)
+        movieStopMenu.setShortcut('Ctrl+P')
+        movieStopMenu.triggered.connect(self.movieStop)
+        controlMenu.addAction(movieStopMenu)
 
         # 動画の巻き戻しボタンを設定する
         movieBackSkipBtn = QPushButton(self.style().standardIcon(getattr(QStyle, 'SP_MediaSkipBackward')), 'Back Skip', self)
         movieBackSkipBtn.clicked.connect(self.movieBackSkip)
+        movieBackSkipMenu = QAction(self.style().standardIcon(getattr(QStyle, 'SP_MediaSkipBackward')), 'Back Skip', self)
+        movieBackSkipMenu.setShortcut('Ctrl+Left')
+        movieBackSkipMenu.triggered.connect(self.movieBackSkip)
+        controlMenu.addAction(movieBackSkipMenu)
 
         movieBackBtn = QPushButton(self.style().standardIcon(getattr(QStyle, 'SP_MediaSeekBackward')), 'Back Seek', self)
         movieBackBtn.clicked.connect(self.movieBack)
+        movieBackMenu = QAction(self.style().standardIcon(getattr(QStyle, 'SP_MediaSeekBackward')), 'Back Seek', self)
+        movieBackMenu.setShortcut('Ctrl+<')
+        movieBackMenu.triggered.connect(self.movieBack)
+        controlMenu.addAction(movieBackMenu)
 
         self.statusBar().addWidget(moviePlayBtn)
         self.statusBar().addWidget(movieStopBtn)

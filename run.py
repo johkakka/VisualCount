@@ -1,15 +1,58 @@
 import sys
 import cv2
 
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QWidget, QHBoxLayout, QLabel, QPushButton, QAction, QStyle, QFileDialog)
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QAction, QStyle, QFileDialog, QDockWidget, QGraphicsItem, QGraphicsScene, QGraphicsView)
 from PyQt5.QtGui import(QIcon, QImage, QPixmap, QPainter, QColor)
 from PyQt5.QtCore import (pyqtSlot, QTimer, Qt)
+
+
+class MainGraphicsItem(QGraphicsItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.image = None
+        self.event = None
+
+    def updateImage(self, image, event):
+        self.image = image
+        self.event = event
+
+    def paint(self, painter, option, widget):
+        painter.setPen(QColor('#FFFFFF'))
+        painter.setBrush(Qt.white)
+        painter.drawRect(self.event.rect())
+
+        if self.image is None:
+            return
+        pixmap = QPixmap.fromImage(self.image)
+        pixmap = pixmap.scaled(self.event.rect().width(), self.event.rect().height(), Qt.KeepAspectRatio, Qt.FastTransformation)
+        painter.drawImage(0, 0, pixmap.toImage())
 
 
 # メインウィンドウの構成
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.leftWidget = QDockWidget("left", self)
+        self.bottomWidget = QDockWidget("bottom", self)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.leftWidget)
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.bottomWidget)
+
+        self.graphitem = MainGraphicsItem()
+        self.scene = QGraphicsScene()
+        self.scene.addItem(self.graphitem)
+        # QGraphicsView
+        graphicView = QGraphicsView()
+        graphicView.setScene(self.scene)
+        # Central Widget
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+
+        # Layout
+        layout = QVBoxLayout()
+        layout.addWidget(graphicView)
+        self.central_widget.setLayout(layout)
+
 
         self.title = 'Visual Counter'
         self.left = 10
@@ -78,14 +121,16 @@ class MainWindow(QMainWindow):
         movieStopMenu.triggered.connect(self.movieStop)
         controlMenu.addAction(movieStopMenu)
 
-        # 動画の巻き戻しボタンを設定する
+        # 動画のバックステップボタンを設定する
         movieBackSkipBtn = QPushButton(self.style().standardIcon(getattr(QStyle, 'SP_MediaSkipBackward')), 'Back Skip', self)
         movieBackSkipBtn.clicked.connect(self.movieBackSkip)
         movieBackSkipMenu = QAction(self.style().standardIcon(getattr(QStyle, 'SP_MediaSkipBackward')), 'Back Skip', self)
         movieBackSkipMenu.setShortcut('Ctrl+Left')
         movieBackSkipMenu.triggered.connect(self.movieBackSkip)
+        controlMenu.insertSeparator(movieBackSkipMenu)
         controlMenu.addAction(movieBackSkipMenu)
 
+        # 動画の巻き戻しボタンを設定する
         movieBackBtn = QPushButton(self.style().standardIcon(getattr(QStyle, 'SP_MediaSeekBackward')), 'Back Seek', self)
         movieBackBtn.clicked.connect(self.movieBack)
         movieBackMenu = QAction(self.style().standardIcon(getattr(QStyle, 'SP_MediaSeekBackward')), 'Back Seek', self)
@@ -206,18 +251,8 @@ class MainWindow(QMainWindow):
         return image
 
     def paintEvent(self, event):
-        painter = QPainter()
-        painter.begin(self)
-        painter.setPen(QColor('#FFFFFF'))
-        painter.setBrush(Qt.white)
-        painter.drawRect(event.rect())
-
-        if self.image is None:
-            return
-        pixmap = QPixmap.fromImage(self.image)
-        pixmap = pixmap.scaled(event.rect().width(), event.rect().height(), Qt.KeepAspectRatio, Qt.FastTransformation)
-        painter.drawImage(0, 0, pixmap.toImage())
-        painter.end()
+        self.graphitem.updateImage(self.image, event)
+        self.central_widget.update()
 
     def closing(self):
         self.video.release()
